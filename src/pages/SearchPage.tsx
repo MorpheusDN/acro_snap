@@ -1,5 +1,5 @@
 import { KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { CornerDownLeft, Loader2, Search, Sparkles, X } from 'lucide-react';
+import { CornerDownLeft, Loader2, Pin, PinOff, Search, Sparkles, X } from 'lucide-react';
 import type { AcronymEntry } from '../types';
 import { EntryCard } from '../components/EntryCard';
 import { explainAcronym } from '../services/ai';
@@ -11,10 +11,11 @@ export function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [aiEntry, setAiEntry] = useState<AcronymEntry | null>(null);
   const [saved, setSaved] = useState(false);
+  const [pinned, setPinned] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const results = useMemo(() => searchEntries(query), [query]);
-  const hasResults = query.trim() && results.length > 0;
+  const results = useMemo(() => (query.trim() ? searchEntries(query) : []), [query]);
+  const hasResults = query.trim().length > 0 && results.length > 0;
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -28,6 +29,12 @@ export function SearchPage() {
     window.addEventListener('focus', reset);
     return () => window.removeEventListener('focus', reset);
   }, []);
+
+  async function togglePinned() {
+    const next = !pinned;
+    setPinned(next);
+    await window.acroSnap?.setWindowPinned(next);
+  }
 
   async function triggerAi() {
     if (!query.trim()) return;
@@ -69,6 +76,18 @@ export function SearchPage() {
   return (
     <main className="search-window">
       <section className="search-panel">
+        <div className="subwindow-toolbar draggable">
+          <span>极速查询</span>
+          <div className="subwindow-actions">
+            <button className={pinned ? 'icon-button active' : 'icon-button'} onClick={togglePinned} title={pinned ? '取消固定' : '固定窗口'}>
+              {pinned ? <Pin size={17} /> : <PinOff size={17} />}
+            </button>
+            <button className="icon-button" onClick={() => window.acroSnap?.hideSearch()} title="关闭">
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
         <div className="search-box">
           <Search size={22} />
           <input
@@ -82,9 +101,6 @@ export function SearchPage() {
             onKeyDown={onKeyDown}
             placeholder="输入 CS / AI 缩写，Enter 查询"
           />
-          <button className="icon-button" onClick={() => window.acroSnap?.hideSearch()} title="关闭">
-            <X size={18} />
-          </button>
         </div>
 
         {!aiEntry && !loading && (
@@ -98,8 +114,8 @@ export function SearchPage() {
                   onClick={() => setAiEntry(entry)}
                 >
                   <span>{entry.acronym}</span>
-                  <strong>{entry.fullName}</strong>
                   <em>{entry.chinese}</em>
+                  <strong>{entry.fullName}</strong>
                 </button>
               ))
             ) : query.trim() ? (
@@ -111,7 +127,7 @@ export function SearchPage() {
             ) : (
               <div className="empty-search">
                 <CornerDownLeft size={18} />
-                本地缓存会实时模糊匹配，未命中时自动进入 AI 兜底
+                输入后展示缩写匹配；未命中时可直接进入 AI 兜底
               </div>
             )}
           </div>

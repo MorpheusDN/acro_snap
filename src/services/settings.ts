@@ -3,18 +3,23 @@ import type { AppSettings } from '../types';
 const key = 'acro-snap:settings';
 
 export const defaultSettings: AppSettings = {
-  aiEndpoint: '',
+  aiEndpoint: 'https://ark.cn-beijing.volces.com/api/v3',
   aiApiKey: '',
-  aiModel: 'gpt-4o-mini',
+  aiModel: 'doubao-seed-2-0-mini-260428',
   supabaseUrl: '',
-  supabaseAnonKey: ''
+  supabasePublishableKey: ''
 };
 
 export function loadSettings(): AppSettings {
   const raw = localStorage.getItem(key);
   if (!raw) return defaultSettings;
   try {
-    return { ...defaultSettings, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw);
+    return {
+      ...defaultSettings,
+      ...parsed,
+      supabasePublishableKey: parsed.supabasePublishableKey || parsed.supabaseAnonKey || ''
+    };
   } catch {
     return defaultSettings;
   }

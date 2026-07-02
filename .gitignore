@@ -1,2 +1,18 @@
-node_modules
-dist
+node_modules/
+
+# Build output
+dist/
+release/
+
+# Local logs and temporary artifacts
+logs/
+.tmp-asar/
+%SystemDrive%/
+
+# Local Codex/agent workspace metadata
+.codex/
+.agents/
+
+# Environment files
+.env
+.env.*
